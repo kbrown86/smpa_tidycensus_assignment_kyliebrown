@@ -35,9 +35,9 @@ You'll need your Census API Key:
 
 ```{r echo=FALSE}
 
-myapikey <- "YOUR API KEY"
+myapikey <- "6915eb30a8f7e581eea519ad7e1ddfaeb7430e38"
 
-census_api_key(myapikey, overwrite=TRUE)
+census_api_key(myapikey, install=TRUE)
 ```
 
 ## Load and view ACS variables
@@ -48,6 +48,7 @@ You'll also need to load the list of American Community Survey variables from th
 
 ```{r}
 
+censusvariables <- load_variables(2021, "acs5", cache = TRUE)
 
 ```
 
@@ -57,10 +58,14 @@ You'll also need to load the list of American Community Survey variables from th
 
 ```{r}
 
+medage <- "B01002_001"
 
+get_acs(geography = "county",
+        variables = medage,
+        state = "MD",
+        output = "wide")
 
-
-
+# Baltimore City has the lowest median age
 
 ```
 
@@ -69,6 +74,10 @@ You'll also need to load the list of American Community Survey variables from th
 
 ```{r}
 
+get_acs(geography = "county",
+        variables = medage,
+        state = "MD",
+        output = "wide")
 
 
 
