@@ -74,12 +74,17 @@ get_acs(geography = "county",
 
 ```{r}
 
-get_acs(geography = "county",
-        variables = medage,
+myvars <- c(medage = "B01002_001")
+
+md_counties <- get_acs(geography = "county",
+        variables = c(myvars),
         state = "MD",
         output = "wide")
 
+md_counties <- md_counties %>%
+  filter(medageE >= 50)
 
+md_counties
 
 ```
 
@@ -92,17 +97,32 @@ Which county has the highest percentage of 5-17 year-olds who speak Spanish at h
 
 ```{r}
 
+youngpop <- "B16007_002"
+speaksspanish <- "B16004_005"
 
 
+get_acs(geography = "county",
+        variables = c(youngpop, speaksspanish),
+        state = "MD",
+        output = "wide")
 
+myvars <- c(totalyoungpop="B16007_002",
+           speaksenglishverywell = "B16004_005" )
 
+young_md_counties <- get_acs(geography = "county",
+        variables = c(myvars),
+        state = "MD",
+        output = "wide")
 
+young_md_counties <- young_md_counties %>%
+  select(-ends_with("M"))
 
+colnames(young_md_counties) <- sub("E$", "", colnames(young_md_counties))
 
-
-
-
-
+young_md_counties <- young_md_counties %>%
+  mutate((speaksenglishverywell/totalyoungpop)*100)  
+  
+# Prince George's County
 ```
 
 
@@ -110,7 +130,7 @@ Which county has the highest percentage of 5-17 year-olds who speak Spanish at h
 
 PUT ANSWER HERE
 
-
+Prince George's County has the largest percentage of 5-17 year old that speak Spanish at home with also the one of the largest young populations as well, showing the diversity of the county. The top 5 counties strike me as being some of the more diverse counties. Garrett County has a very small young population, and the smallest number of 5-17 year olds that speak Spanish at home. 
 
 **Q5** Pennsylvanians are currently requesting and submitting mail ballots for the November election. You'd like to know more about the people who live in the areas sending in mail ballots. Read in the `zip_totals.csv` file in the data folder containing the number of returned mail ballots per zip code. Then create a dataframe of Pennsylvania ZCTAs that include the following variables from the 2019 ACS: total population and median income. You will need to add `output = "wide"` to the get_acs function so that you get columns for those two variables' estimates and margins of error.
 
