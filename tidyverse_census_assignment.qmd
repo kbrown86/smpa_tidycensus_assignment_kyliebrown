@@ -37,7 +37,7 @@ You'll need your Census API Key:
 
 myapikey <- "6915eb30a8f7e581eea519ad7e1ddfaeb7430e38"
 
-census_api_key(myapikey, install=TRUE)
+census_api_key(myapikey, overwrite=TRUE)
 ```
 
 ## Load and view ACS variables
@@ -128,39 +128,92 @@ young_md_counties <- young_md_counties %>%
 
 **Q4** Given the counties with the largest percentage of 5-17 year-olds that speak Spanish at home, which county stands out to you in the data as different from the others? How would you describe the top 5 counties? How would you describe Garrett County's numbers?
 
-PUT ANSWER HERE
-
 Prince George's County has the largest percentage of 5-17 year old that speak Spanish at home with also the one of the largest young populations as well, showing the diversity of the county. The top 5 counties strike me as being some of the more diverse counties. Garrett County has a very small young population, and the smallest number of 5-17 year olds that speak Spanish at home. 
 
 **Q5** Pennsylvanians are currently requesting and submitting mail ballots for the November election. You'd like to know more about the people who live in the areas sending in mail ballots. Read in the `zip_totals.csv` file in the data folder containing the number of returned mail ballots per zip code. Then create a dataframe of Pennsylvania ZCTAs that include the following variables from the 2019 ACS: total population and median income. You will need to add `output = "wide"` to the get_acs function so that you get columns for those two variables' estimates and margins of error.
 
 Join the ZCTA dataframe to the zip totals dataframe and calculate a per capita rate for mail ballots per 100 population in each ZCTA, and write code to answer the following questions?
 
--   Which zip code *that has returned at least 100 mail ballots* has the highest per capita rate?
--   Where is that zip code and what does Census Reporter say about its demographics?
--   For zip codes with a per capita rate of at least 10 returned ballots per 100 people, how many have median incomes of at least \$100,000?
--   How many have median incomes less than the state figure of \$68,957?
--   What's the most interesting one from this last result?
+-   Which zip code *that has returned at least 100 mail ballots* has the highest per capita rate? 19436
+-   Where is that zip code and what does Census Reporter say about its demographics? Gwynedd, PA, ~76% white population 
+-   For zip codes with a per capita rate of at least 10 returned ballots per 100 people, how many have median incomes of at least \$100,000?  Four
+-   How many have median incomes less than the state figure of \$68,957? 1,242
+-   What's the most interesting one from this last result? This is a significant amount of people who are the under median income. 
 
 ```{r}
+pa_zip_totals <- read.csv("data/pa_zip_totals.csv")
+
+censusvariables2 <- load_variables(2019, "acs5", cache = TRUE)
+
+myvars <- c(totalpop = "B01003_001",
+            medincome = "B19013_001" )
+
+# you were using county here:
+
+# pa_counties_withgeo <- get_acs(geography = "county",
+#         variables = c(myvars),
+#         state = "PA",
+#         output = "wide",
+#         geometry = TRUE)
+
+#but what you'll want is zip code areas:
+
+pa_zips <- get_acs(geography = 'zcta', 
+                   state = 'PA', 
+                   variables = c(myvars), 
+                   year = 2019, 
+                   output = "wide")
+
+pa_zips
+```
 
 
+```{r}
+pa_zips <- pa_zips %>%
+  select(-ends_with("M"))
 
+colnames(pa_zips) <- sub("E$", "", colnames(pa_zips))
 
-
-
-
-
+pa_zips
 ```
 
 
 ```{r}
 
+# Join the ZCTA dataframe to the zip totals dataframe and calculate a per capita rate for mail ballots per 100 population in each ZCTA, and write code to answer the following questions?
+
+pa_zip_totals <- pa_zip_totals %>% 
+  mutate(across(zip, as.character))
+
+# instead of joining to counties:
+# join <- pa_counties_withgeo %>%
+#   left_join(pa_zip_totals, 
+#             by = c("GEOID" = "zip")) 
+
+#join to zipcode table
+join <- pa_zips %>%
+  left_join(pa_zip_totals,
+            by = c("GEOID" = "zip"))
+
+zcta <- join
+
+zcta <- zcta %>% 
+  mutate(
+    percapita = count/totalpop * 100
+    ) %>%
+      select(percapita, everything()
+      )
 
 
+zcta2 <- zcta %>%
+  filter(percapita >= 10) %>%
+  filter(medincome >= 100000)
 
+zcta3 <- zcta %>%
+  filter(medincome <= 68957) 
 
+zcta3
 
-
+How many have median incomes less than the state figure of \$68,957?
 
 ```
